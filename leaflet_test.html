@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Leaflet Vector Tile Parcels POC</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" />
+    <link rel="stylesheet" href="https://azavea.github.io/Leaflet.zoomdisplay/css/leaflet.zoomdisplay.css" />
+</head>
+<body style='margin:0'>
+	<div id="map" style="width: 100vw; height: 100vh; background: white"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js"></script>
+    <script type="text/javascript"  src="https://unpkg.com/leaflet.vectorgrid@1.2.0"></script>
+    <script src="https://azavea.github.io/Leaflet.zoomdisplay/js/leaflet.zoomdisplay.js"></script>
+	<script>
+		var map = L.map('map');
+		var rasterTileLayer = L.tileLayer('http://tiles-a.data-cdn.linz.govt.nz/services;key=c44833eda9954045acccc1436b7e11df/tiles/v4/set=4769/EPSG:3857/{z}/{x}/{y}.png', {
+			attribution: '<a href="http://www.linz.govt.nz">Sourced from LINZ. CC-BY 3.0</a>',
+            maxZoom: 21,
+		}).addTo(map);
+
+		var vectorTileStyling = {
+			coastline: {
+				weight: 1,
+				fillColor: 'pink',
+				color: 'pink',
+				fillOpacity: 0.2,
+				opacity: 1.0
+			},
+			roads: {
+				weight: 1,
+				color: '#f2b648',
+				fillOpacity: 0.3,
+				opacity: 1.0
+			},
+			parcels: {
+				weight: 1,
+				fillColor: '#f2b648',
+				color: '#f2b648',
+				fillOpacity: 0.3,
+				opacity: 1.0
+			}
+		};
+		var vectorTilesettings = {
+			rendererFactory: L.canvas.tile,
+			attribution: '<a href="http://www.linz.govt.nz">Sourced from LINZ. CC-BY 3.0</a>',
+			vectorTileLayerStyles: vectorTileStyling,
+		};
+        var tegolaPbfLayer = L.vectorGrid.protobuf('http://localhost:8080/maps/parcel_map_poc/{z}/{x}/{y}.pbf', vectorTilesettings);
+
+		map.setView({lat: -41.437, lng: 173.995}, 6);
+		L.control.layers({},{
+			"LDS Parcels XYZ Raster Tiles": rasterTileLayer,
+			"Tegola localhost Vector Tiles": tegolaPbfLayer,
+		}, {collapsed: false}).addTo(map);
+	</script>
+</body>
+</html>

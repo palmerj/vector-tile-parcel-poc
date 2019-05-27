@@ -1,0 +1,35 @@
+version: '2.1'
+services:
+    db:
+        build:
+            context: .
+            dockerfile: Dockerfile.db
+            args:
+              - LDS_API_KEY=${LDS_API_KEY}
+        environment:
+            - POSTGRES_USER=${PG_USER}
+            - POSTGRES_PASSWORD=${PG_PASS}
+            - POSTGRES_DB=${POSTGRES_DB}
+        volumes:
+          - ./data/postgres:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+    tegola:
+        build:
+            context: .
+            dockerfile: Dockerfile.tegola
+        environment:
+            - PGUSER=${PG_USER}
+            - PGPASSWORD=${PG_PASS}
+            - PGDATABASE=${POSTGRES_DB}
+            - TEGOLA_SQL_DEBUG=EXECUTE_SQL
+        ports:
+            - "8080:8080"
+        depends_on:
+            - "db"
+        command: ["/opt/wait-for-postgres.sh", "db", "/opt/tegola", "--config", "/opt/tegola_config/config.toml", "serve"]

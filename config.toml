@@ -1,0 +1,58 @@
+[webserver]
+port = ":8080"
+CORSAllowedOrigin = "*"
+
+[cache]
+type="file"             # cache type
+basepath="/tmp/tegola"  # cache specific config
+
+# register data providers
+[[providers]]
+name = "linz_poc"          # provider name is referenced from map layers (required)
+type = "postgis"           # the type of data provider. currently only supports postgis (required)
+host = "db"                # postgis database host (required)
+port = 5432                # postgis database port (required)
+database = "${PGDATABASE}" # postgis database name (required)
+user = "${PGUSER}"         # postgis database user (required)
+password = "${PGPASSWORD}" # postgis database password (required)
+srid = 3857                # The default srid for this provider. Defaults to WebMercator (3857) (optional)
+max_connections = 50       # The max connections to maintain in the connection pool. Default is 100. (optional)
+
+  [[providers.layers]]
+  name = "parcels"
+  geometry_fieldname = "shape"
+  id_fieldname = "id"
+  sql = "SELECT id, topology_type, parcel_intent, ST_AsBinary(shape) AS shape FROM nzdata.nz_parcels WHERE status = 'Current' AND shape && !BBOX!"
+
+  [[providers.layers]]
+  name = "roads"
+  geometry_fieldname = "shape"
+  id_fieldname = "t50_fid"
+  sql = "SELECT t50_fid, hway_num, ST_AsBinary(shape) AS shape FROM nzdata.nz_topo50_roads WHERE hway_num IS NOT NULL AND shape && !BBOX!"
+
+  [[providers.layers]]
+  name = "coastline"
+  geometry_fieldname = "shape"
+  id_fieldname = "objectid"
+  sql = "SELECT objectid, name, ST_AsBinary(shape) AS shape FROM nzdata.nz_topo50_coastline WHERE shape && !BBOX!"
+
+[[maps]]
+name = "parcel_map_poc"
+attribution = "LINZ CC-BY 4.0"
+center = [173.995, -41.437, 6.0]
+bounds = [163.4326171875, -52.40241887397331, 185.0537109375, -32.73184089686568]
+
+  [[maps.layers]]
+  provider_layer = "linz_poc.parcels"
+  min_zoom = 10
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "linz_poc.roads"
+  min_zoom = 5
+  max_zoom = 9
+
+  [[maps.layers]]
+  provider_layer = "linz_poc.coastline"
+  min_zoom = 0
+  max_zoom = 9

@@ -1,0 +1,18 @@
+FROM alpine:3.9 AS data
+ARG LDS_API_KEY
+ENV LDS_API_KEY "$LDS_API_KEY"
+RUN apk add \
+   --no-cache \
+   --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+   --repository http://dl-cdn.alpinelinux.org/alpine/edge/main \
+   bash gdal curl
+ADD download_data.sh /opt/download_data.sh
+RUN /opt/download_data.sh
+
+FROM mdillon/postgis:11
+COPY --from=data \
+   z01-nz-coastlines.sql.gz \
+   z02-nz-roads.sql.gz \
+   z03-nz-parcels.sql.gz \
+   z04-spatial-indexes.sql \
+   /docker-entrypoint-initdb.d/
